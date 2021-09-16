@@ -32,6 +32,7 @@ Biplot of design matrix `X`. See https://en.wikipedia.org/wiki/Biplot.
     axisbody  = nothing, # size of principal axis body
     axishead  = nothing, # size of principal axis head
     axiscolor = :black,  # color of principal axes
+    axisnames = nothing, # names of principal axis
     dotsize   = nothing, # size of sample dots
     dotcolor  = :black,  # color of sample dots
   )
@@ -47,8 +48,12 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   axisbody  = plot[:axisbody][]
   axishead  = plot[:axishead][]
   axiscolor = plot[:axiscolor][]
+  axisnames = plot[:axisnames][]
   dotsize   = plot[:dotsize][]
   dotcolor  = plot[:dotcolor][]
+
+  # size of design matrix
+  n, m = size(X)
 
   # defaults differ on 2 or 3 dimensions
   if isnothing(axisbody)
@@ -57,6 +62,9 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   if isnothing(axishead)
     axishead = d == 2 ? 6 : 0.03
   end
+  if isnothing(axisnames)
+    axisnames = ["x$i" for i in 1:m]
+  end
   if isnothing(dotsize)
     dotsize = d == 2 ? 4 : 10
   end
@@ -64,9 +72,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   # sanity checks
   @assert d ∈ [2,3] "d must be 2 or 3"
   @assert 0 ≤ α ≤ 1 "α must be in [0,1]"
-
-  # number of samples
-  n = size(X, 1)
+  @assert length(axisnames) == m "axisnames must have length $m"
 
   # center matrix
   Z = X .- mean(X, dims=1)
@@ -89,6 +95,12 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
     arrowsize  = axishead,
     arrowcolor = axiscolor,
     linecolor  = axiscolor,
+  )
+
+  # plot axis names
+  position = Tuple.(direcs)
+  Makie.text!(plot, axisnames,
+    position = position,
   )
 
   # plot samples
