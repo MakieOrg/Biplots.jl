@@ -48,6 +48,8 @@ See https://en.wikipedia.org/wiki/Biplot.
     axesnames = nothing,
     dotsize   = nothing,
     dotcolor  = :black,
+    dotnames  = nothing,
+    showdotnames = true,
   )
 end
 
@@ -58,12 +60,14 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   d = plot[:dim][]
 
   # retrieve options
-  axesbody  = plot[:axesbody][]
-  axeshead  = plot[:axeshead][]
-  axescolor = plot[:axescolor][]
-  axesnames = plot[:axesnames][]
-  dotsize   = plot[:dotsize][]
-  dotcolor  = plot[:dotcolor][]
+  axesbody     = plot[:axesbody][]
+  axeshead     = plot[:axeshead][]
+  axescolor    = plot[:axescolor][]
+  axesnames    = plot[:axesnames][]
+  dotsize      = plot[:dotsize][]
+  dotcolor     = plot[:dotcolor][]
+  dotnames     = plot[:dotnames][]
+  showdotnames = plot[:showdotnames][]
 
   # size of design matrix
   n, m = size(X)
@@ -81,11 +85,15 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   if isnothing(dotsize)
     dotsize = d == 2 ? 4 : 10
   end
+  if isnothing(dotnames)
+    dotnames = ["i" for i in 1:n]
+  end
 
   # sanity checks
   @assert d ∈ [2,3] "d must be 2 or 3"
   @assert 0 ≤ α ≤ 1 "α must be in [0,1]"
   @assert length(axesnames) == m "axesnames must have length $m"
+  @assert length(dotnames) == n "dotnames must have length $n"
 
   # center matrix
   Z = X .- mean(X, dims=1)
@@ -122,6 +130,14 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
     markersize = dotsize,
     color = dotcolor,
   )
+
+  if showdotnames
+    # plot sample names
+    position = Tuple.(points)
+    Makie.text!(plot, string.(1:n),
+      position = position,
+    )
+  end
 end
 
 end
