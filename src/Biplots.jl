@@ -8,10 +8,23 @@ import Makie
 """
     biplot(X)
 
-Biplot of design matrix `X`. See https://en.wikipedia.org/wiki/Biplot.
+Biplot of design matrix `X` with various options:
 
-* `d` - Number of dimensions `d ∈ {2,3}`
-* `α` - Shape parameter `α ∈ [0,1]`
+# Biplot attributes
+
+* `d` - number of dimensions `d ∈ {2,3}`
+* `α` - shape parameter `α ∈ [0,1]`
+
+# Aesthetics attributes
+
+* `axesbody`  - size of principal axes' body
+* `axeshead`  - size of principal axes' head
+* `axescolor` - color of principal axes
+* `axesnames` - names of principal axes
+* `dotsize`   - size of samples
+* `dotcolor`  - color of samples
+
+See https://en.wikipedia.org/wiki/Biplot.
 
 ## References
 
@@ -25,16 +38,16 @@ Biplot of design matrix `X`. See https://en.wikipedia.org/wiki/Biplot.
 @Makie.recipe(Biplot, X) do scene
   Makie.Attributes(;
     # biplot attributes
-    d = 2,   # number of dimensions
-    α = 1.0, # shape parameter
+    d = 2,
+    α = 1.0,
 
     # aesthetic attributes
-    axisbody  = nothing, # size of principal axis body
-    axishead  = nothing, # size of principal axis head
-    axiscolor = :black,  # color of principal axes
-    axisnames = nothing, # names of principal axis
-    dotsize   = nothing, # size of sample dots
-    dotcolor  = :black,  # color of sample dots
+    axesbody  = nothing,
+    axeshead  = nothing,
+    axescolor = :black,
+    axesnames = nothing,
+    dotsize   = nothing,
+    dotcolor  = :black,
   )
 end
 
@@ -45,10 +58,10 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   α = plot[:α][]
 
   # retrieve options
-  axisbody  = plot[:axisbody][]
-  axishead  = plot[:axishead][]
-  axiscolor = plot[:axiscolor][]
-  axisnames = plot[:axisnames][]
+  axesbody  = plot[:axesbody][]
+  axeshead  = plot[:axeshead][]
+  axescolor = plot[:axescolor][]
+  axesnames = plot[:axesnames][]
   dotsize   = plot[:dotsize][]
   dotcolor  = plot[:dotcolor][]
 
@@ -56,14 +69,14 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   n, m = size(X)
 
   # defaults differ on 2 or 3 dimensions
-  if isnothing(axisbody)
-    axisbody = d == 2 ? 2 : 0.01
+  if isnothing(axesbody)
+    axesbody = d == 2 ? 2 : 0.01
   end
-  if isnothing(axishead)
-    axishead = d == 2 ? 6 : 0.03
+  if isnothing(axeshead)
+    axeshead = d == 2 ? 6 : 0.03
   end
-  if isnothing(axisnames)
-    axisnames = ["x$i" for i in 1:m]
+  if isnothing(axesnames)
+    axesnames = ["x$i" for i in 1:m]
   end
   if isnothing(dotsize)
     dotsize = d == 2 ? 4 : 10
@@ -72,7 +85,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   # sanity checks
   @assert d ∈ [2,3] "d must be 2 or 3"
   @assert 0 ≤ α ≤ 1 "α must be in [0,1]"
-  @assert length(axisnames) == m "axisnames must have length $m"
+  @assert length(axesnames) == m "axesnames must have length $m"
 
   # center matrix
   Z = X .- mean(X, dims=1)
@@ -91,15 +104,15 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   points = fill(Makie.Point(ntuple(i->0., d)), n)
   direcs = [Makie.Vec{d}(v) for v in eachrow(G)]
   Makie.arrows!(plot, points, direcs,
-    linewidth  = axisbody,
-    arrowsize  = axishead,
-    arrowcolor = axiscolor,
-    linecolor  = axiscolor,
+    linewidth  = axesbody,
+    arrowsize  = axeshead,
+    arrowcolor = axescolor,
+    linecolor  = axescolor,
   )
 
-  # plot axis names
+  # plot axes names
   position = Tuple.(direcs)
-  Makie.text!(plot, axisnames,
+  Makie.text!(plot, axesnames,
     position = position,
   )
 
