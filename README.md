@@ -22,7 +22,7 @@ import GLMakie
 X = rand(100, 5)
 
 # 3D biplot with named axes
-biplot(X, d = 3, axesnames = ["CO₂","O₂","N₂","S","Cu"])
+biplot(X, dim = 3, axesnames = ["CO₂","O₂","N₂","S","Cu"])
 ```
 
 ![biplot](docs/biplot.png)

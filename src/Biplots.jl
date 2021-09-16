@@ -12,8 +12,8 @@ Biplot of design matrix `X` with various options:
 
 # Biplot attributes
 
-* `d` - number of dimensions `d ∈ {2,3}`
-* `α` - shape parameter `α ∈ [0,1]`
+* `α`   - shape parameter `α ∈ [0,1]` (default to `1`)
+* `dim` - number of dimensions `dim ∈ {2,3}` (default to `2`)
 
 # Aesthetics attributes
 
@@ -38,8 +38,8 @@ See https://en.wikipedia.org/wiki/Biplot.
 @Makie.recipe(Biplot, X) do scene
   Makie.Attributes(;
     # biplot attributes
-    d = 2,
-    α = 1.0,
+    α   = 1.0,
+    dim = 2,
 
     # aesthetic attributes
     axesbody  = nothing,
@@ -54,8 +54,8 @@ end
 function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   # retrieve parameters
   X = plot[:X][]
-  d = plot[:d][]
   α = plot[:α][]
+  d = plot[:dim][]
 
   # retrieve options
   axesbody  = plot[:axesbody][]
