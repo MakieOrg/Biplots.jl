@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/juliohm/Biplots.jl/workflows/CI/badge.svg)](https://github.com/juliohm/Biplots.jl/actions)
 
-[Biplot](https://en.wikipedia.org/wiki/Biplot) recipe in 2D and 3D for Makie.jl.
+[Biplot](https://en.wikipedia.org/wiki/Biplot) recipes in 2D and 3D for Makie.jl.
 
 ## Installation
 
