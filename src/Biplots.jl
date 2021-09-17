@@ -8,12 +8,14 @@ import Makie
 """
     biplot(X)
 
-Biplot of design matrix `X` with various options:
+Biplot of design matrix `X`.
 
 # Biplot attributes
 
-* `α`   - shape parameter `α ∈ [0,1]` (default to `1`)
-* `dim` - number of dimensions `dim ∈ {2,3}` (default to `2`)
+* `center` - centering function (default to `f(X) = X .- mean(X, dims=1)`)
+* `dim`    - number of dimensions `dim ∈ {2,3}` (default to `2`)
+* `α`      - shape parameter `α ∈ [0,1]` (default to `1`)
+* `κ`      - normalization constant for axes (default to `√(size(X,1)-1)`)
 
 # Aesthetics attributes
 
@@ -38,8 +40,10 @@ See https://en.wikipedia.org/wiki/Biplot.
 @Makie.recipe(Biplot, X) do scene
   Makie.Attributes(;
     # biplot attributes
-    α   = 1.0,
-    dim = 2,
+    center = X -> X .- mean(X, dims=1),
+    dim    = 2,
+    α      = 1.0,
+    κ      = nothing,
 
     # aesthetic attributes
     axesbody  = nothing,
@@ -56,8 +60,18 @@ end
 function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   # retrieve parameters
   X = plot[:X][]
-  α = plot[:α][]
+  f = plot[:center][]
   d = plot[:dim][]
+  α = plot[:α][]
+  κ = plot[:κ][]
+
+  # size of design matrix
+  n, m = size(X)
+
+  # default normalization of axes
+  if isnothing(κ)
+    κ = α > 0.5 ? √(n-1) : 1.0
+  end
 
   # retrieve options
   axesbody     = plot[:axesbody][]
@@ -68,9 +82,6 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   dotcolor     = plot[:dotcolor][]
   dotnames     = plot[:dotnames][]
   showdotnames = plot[:showdotnames][]
-
-  # size of design matrix
-  n, m = size(X)
 
   # defaults differ on 2 or 3 dimensions
   if isnothing(axesbody)
@@ -95,8 +106,8 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   @assert length(axesnames) == m "axesnames must have length $m"
   @assert length(dotnames) == n "dotnames must have length $n"
 
-  # center matrix
-  Z = X .- mean(X, dims=1)
+  # centering transformation
+  Z = f(X)
 
   # singular value decomposition
   U, σ, V = svd(Z)
@@ -110,7 +121,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
 
   # plot principal axes
   points = fill(Makie.Point(ntuple(i->0., d)), n)
-  direcs = [Makie.Vec{d}(v) for v in eachrow(G)]
+  direcs = [Makie.Vec{d}(v) for v in eachrow(G)] ./ κ
   Makie.arrows!(plot, points, direcs,
     linewidth  = axesbody,
     arrowsize  = axeshead,
