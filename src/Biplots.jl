@@ -12,10 +12,10 @@ Biplot of design matrix `X`.
 
 # Biplot attributes
 
-* `center` - centering function (default to `f(X) = X .- mean(X, dims=1)`)
-* `dim`    - number of dimensions `dim ∈ {2,3}` (default to `2`)
-* `α`      - shape parameter `α ∈ [0,1]` (default to `1`)
-* `κ`      - normalization constant for axes (default to `√(size(X,1)-1)`)
+* `dim` - number of dimensions `dim ∈ {2,3}` (default to `2`)
+* `f`   - transformation function (default to `f(X) = X .- mean(X, dims=1)`)
+* `α`   - shape parameter `α ∈ [0,1]` (default to `1`)
+* `κ`   - normalization constant for axes (default to `√(size(X,1)-1)`)
 
 # Aesthetics attributes
 
@@ -40,10 +40,10 @@ See https://en.wikipedia.org/wiki/Biplot.
 @Makie.recipe(Biplot, X) do scene
   Makie.Attributes(;
     # biplot attributes
-    center = X -> X .- mean(X, dims=1),
-    dim    = 2,
-    α      = 1.0,
-    κ      = nothing,
+    dim = 2,
+    f   = X -> X .- mean(X, dims=1),
+    α   = 1.0,
+    κ   = nothing,
 
     # aesthetic attributes
     axesbody  = nothing,
@@ -60,8 +60,8 @@ end
 function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   # retrieve parameters
   X = plot[:X][]
-  f = plot[:center][]
   d = plot[:dim][]
+  f = plot[:f][]
   α = plot[:α][]
   κ = plot[:κ][]
 
@@ -106,7 +106,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   @assert length(axesnames) == m "axesnames must have length $m"
   @assert length(dotnames) == n "dotnames must have length $n"
 
-  # centering transformation
+  # transformation
   Z = f(X)
 
   # singular value decomposition
