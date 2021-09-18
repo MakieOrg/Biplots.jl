@@ -21,8 +21,8 @@ import GLMakie
 # design matrix (100 obs x 5 vars)
 X = rand(100, 5)
 
-# 3D biplot with named axes
-biplot(X, dim = 3, axesnames = ["CO₂","O₂","N₂","S","Cu"])
+# 3D biplot with named principal axes
+biplot(X, dim = 3, axeslabel = ["CO₂","O₂","N₂","S","Cu"])
 ```
 
 ![biplot](docs/biplot.png)

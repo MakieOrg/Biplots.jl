@@ -8,23 +8,25 @@ import Makie
 """
     biplot(X)
 
-Biplot of design matrix `X`.
+Biplot of design matrix `X` (nobs × nvars).
 
 # Biplot attributes
 
 * `dim` - number of dimensions `dim ∈ {2,3}` (default to `2`)
 * `f`   - transformation function (default to `f(X) = X .- mean(X, dims=1)`)
 * `α`   - shape parameter `α ∈ [0,1]` (default to `1`)
-* `κ`   - normalization constant for axes (default to `√(size(X,1)-1)`)
+* `κ`   - normalization constant for principal axes (default to `√(nobs-1)`)
 
 # Aesthetics attributes
 
-* `axesbody`  - size of principal axes' body
-* `axeshead`  - size of principal axes' head
-* `axescolor` - color of principal axes
-* `axesnames` - names of principal axes
-* `dotsize`   - size of samples
-* `dotcolor`  - color of samples
+* `axesbody`  - size of principal axes' body (depends on `dim`)
+* `axeshead`  - size of principal axes' head (depends on `dim`)
+* `axescolor` - color of principal axes (default to `:black`)
+* `axeslabel` - names of principal axes (default to `x1,x2,...`)
+* `dotsize`   - size of sample dots (depends on `dim`)
+* `dotcolor`  - color of sample dots (default to `:black`)
+* `dotlabel`  - names of sample dots (default to `1:nobs`)
+* `showdots`  - show names of dots (default to `true`)
 
 See https://en.wikipedia.org/wiki/Biplot.
 
@@ -49,11 +51,11 @@ See https://en.wikipedia.org/wiki/Biplot.
     axesbody  = nothing,
     axeshead  = nothing,
     axescolor = :black,
-    axesnames = nothing,
+    axeslabel = nothing,
     dotsize   = nothing,
     dotcolor  = :black,
-    dotnames  = nothing,
-    showdotnames = true,
+    dotlabel  = nothing,
+    showdots  = true,
   )
 end
 
@@ -74,14 +76,14 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   end
 
   # retrieve options
-  axesbody     = plot[:axesbody][]
-  axeshead     = plot[:axeshead][]
-  axescolor    = plot[:axescolor][]
-  axesnames    = plot[:axesnames][]
-  dotsize      = plot[:dotsize][]
-  dotcolor     = plot[:dotcolor][]
-  dotnames     = plot[:dotnames][]
-  showdotnames = plot[:showdotnames][]
+  axesbody  = plot[:axesbody][]
+  axeshead  = plot[:axeshead][]
+  axescolor = plot[:axescolor][]
+  axeslabel = plot[:axeslabel][]
+  dotsize   = plot[:dotsize][]
+  dotcolor  = plot[:dotcolor][]
+  dotlabel  = plot[:dotlabel][]
+  showdots  = plot[:showdots][]
 
   # defaults differ on 2 or 3 dimensions
   if isnothing(axesbody)
@@ -90,21 +92,21 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   if isnothing(axeshead)
     axeshead = d == 2 ? 6 : 0.03
   end
-  if isnothing(axesnames)
-    axesnames = ["x$i" for i in 1:m]
+  if isnothing(axeslabel)
+    axeslabel = ["x$i" for i in 1:m]
   end
   if isnothing(dotsize)
     dotsize = d == 2 ? 4 : 10
   end
-  if isnothing(dotnames)
-    dotnames = ["i" for i in 1:n]
+  if isnothing(dotlabel)
+    dotlabel = string.(1:n)
   end
 
   # sanity checks
   @assert d ∈ [2,3] "d must be 2 or 3"
   @assert 0 ≤ α ≤ 1 "α must be in [0,1]"
-  @assert length(axesnames) == m "axesnames must have length $m"
-  @assert length(dotnames) == n "dotnames must have length $n"
+  @assert length(axeslabel) == m "axeslabel must have length $m"
+  @assert length(dotlabel) == n "dotlabel must have length $n"
 
   # transformation
   Z = f(X)
@@ -131,7 +133,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
 
   # plot axes names
   position = Tuple.(direcs)
-  Makie.text!(plot, axesnames,
+  Makie.text!(plot, axeslabel,
     position = position,
   )
 
@@ -142,10 +144,10 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
     color = dotcolor,
   )
 
-  if showdotnames
+  if showdots
     # plot sample names
     position = Tuple.(points)
-    Makie.text!(plot, string.(1:n),
+    Makie.text!(plot, dotlabel,
       position = position,
     )
   end
