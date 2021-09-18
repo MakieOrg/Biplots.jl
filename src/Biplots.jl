@@ -135,6 +135,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   position = Tuple.(direcs)
   Makie.text!(plot, axeslabel,
     position = position,
+    color = axescolor,
   )
 
   # plot samples
@@ -149,6 +150,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
     position = Tuple.(points)
     Makie.text!(plot, dotlabel,
       position = position,
+      color = dotcolor,
     )
   end
 end
