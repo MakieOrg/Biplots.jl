@@ -49,6 +49,7 @@ See https://en.wikipedia.org/wiki/Biplot.
     κ   = nothing,
 
     # aesthetic attributes
+    colormap  = Makie.theme(scene, :colormap),
     axesbody  = nothing,
     axeshead  = nothing,
     axescolor = :black,
@@ -77,6 +78,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   end
 
   # retrieve options
+  colormap  = plot[:colormap][]
   axesbody  = plot[:axesbody][]
   axeshead  = plot[:axeshead][]
   axescolor = plot[:axescolor][]
@@ -101,6 +103,11 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   end
   if isnothing(dotlabel)
     dotlabel = string.(1:n)
+  end
+  if dotcolor isa AbstractVector{<:Number}
+    min, max = extrema(dotcolor)
+    scale(x) = x / (max-min) - min / (max - min)
+    dotcolor = Makie.cgrad(colormap)[scale.(dotcolor)]
   end
 
   # sanity checks
