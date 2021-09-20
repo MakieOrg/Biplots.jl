@@ -60,6 +60,7 @@ There are four kinds of biplots:
 * `dotcolor`  - color of sample dots (default to `:black`)
 * `dotlabel`  - names of sample dots (default to `1:nobs`)
 * `showdots`  - show names of dots (default to `true`)
+* `showlinks` - show links between principal axes (default to`false`)
 
 See https://en.wikipedia.org/wiki/Biplot.
 
@@ -88,6 +89,7 @@ See https://en.wikipedia.org/wiki/Biplot.
     dotcolor  = :black,
     dotlabel  = nothing,
     showdots  = true,
+    showlinks = false,
   )
 end
 
@@ -107,6 +109,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   dotcolor  = plot[:dotcolor][]
   dotlabel  = plot[:dotlabel][]
   showdots  = plot[:showdots][]
+  showlinks = plot[:showlinks][]
 
   # size of design matrix
   n, p = size(X)
@@ -169,6 +172,23 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
     color = axescolor,
   )
 
+  # plot links between axes
+  if showlinks
+    links = Makie.Vec{dim}[]
+    for i in 1:p
+      for j in i+1:p
+        push!(links, direcs[i])
+        push!(links, direcs[j])
+      end
+    end
+    position = Tuple.(links)
+    Makie.linesegments!(plot, position,
+      color = :gray,
+      linestyle = :dash,
+      linewidth = 0.5,
+    )
+  end
+
   # plot samples
   points = [Makie.Point{dim}(v) for v in eachrow(F)]
   Makie.scatter!(plot, points,
@@ -177,7 +197,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   )
 
   if showdots
-    # plot sample names
+    # plot samples names
     position = Tuple.(points)
     Makie.text!(plot, dotlabel,
       position = position,
