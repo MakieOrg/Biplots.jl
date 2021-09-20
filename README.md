@@ -16,13 +16,14 @@ Get the latest stable release with Julia's package manager:
 
 ```julia
 using Biplots
-import GLMakie
+using GLMakie
 
 # design matrix (100 obs x 5 vars)
 X = rand(100, 5)
 
 # 3D biplot with named principal axes
-biplot(X, dim = 3, axeslabel = ["CO₂","O₂","N₂","S","Cu"])
+fig, ax = biplot(X, dim = 3, axeslabel = ["CO₂","O₂","N₂","S","Cu"])
+ax.aspect = DataAspect()
 ```
 
 ![biplot](docs/biplot.png)
