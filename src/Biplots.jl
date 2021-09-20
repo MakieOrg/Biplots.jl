@@ -157,10 +157,15 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
 
   # plot variance explained
   minpos = fill(Inf, d)
-  for direc in direcs
-    for i in 1:d
+  for i in 1:d
+    for direc in direcs
       if direc[i] < minpos[i]
         minpos[i] = direc[i]
+      end
+    end
+    for point in points
+      if point[i] < minpos[i]
+        minpos[i] = point[i]
       end
     end
   end
