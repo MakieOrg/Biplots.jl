@@ -6,17 +6,49 @@ using Printf
 
 import Makie
 
-"""
-    biplot(X)
+# -----------------------
+# TYPES OF NORMALIZATION
+# -----------------------
 
-Biplot of design matrix `X` (nobs × nvars).
+center(X) = X .- mean(X, dims=1)
+
+function logcenter(X)
+  L  = log.(X)
+  μn = mean(L, dims=1)
+  μp = mean(L, dims=2)
+  μ  = mean(L)
+  L .- μn .- μp .+ μ
+end
+
+formtransform(X)  = (Z=center(X),    α=1.0, κ=√(size(X,1)-1))
+covtransform(X)   = (Z=center(X),    α=0.0, κ=1.0           )
+rformtransform(X) = (Z=logcenter(X), α=1.0, κ=1.0           )
+rcovtransform(X)  = (Z=logcenter(X), α=0.0, κ=√size(X,2)    )
+
+biplotof = Dict(
+  :form => formtransform,
+  :cov  => covtransform,
+  :rform => rformtransform,
+  :rcov => rcovtransform
+)
+
+"""
+    biplot(X; dim=2, kind=:form)
+
+Biplot of design matrix `X` (nobs × nvars) of given `kind`
+in `dim`-dimensional space.
+
+There are four kinds of biplots:
+
+* `:form`  - standard biplot with shape parameter `α = 1`
+* `:cov`   - standard biplot with shape parameter `α = 0`
+* `:rform` - relative variation biplot with `α = 1`
+* `:rcov`  - relative variation biplot with `α = 0`
 
 # Biplot attributes
 
-* `dim` - number of dimensions `dim ∈ {2,3}` (default to `2`)
-* `f`   - transformation function (default to `f(X) = X .- mean(X, dims=1)`)
-* `α`   - shape parameter `α ∈ [0,1]` (default to `1`)
-* `κ`   - normalization constant for principal axes (default to `√(nobs-1)`)
+* `dim`  - number of dimensions `dim ∈ {2,3}` (default to `2`)
+* `kind` - kind of biplot (`:form`, `:cov`, `:rform` or `:rcov`)
 
 # Aesthetics attributes
 
@@ -43,10 +75,8 @@ See https://en.wikipedia.org/wiki/Biplot.
 @Makie.recipe(Biplot, X) do scene
   Makie.Attributes(;
     # biplot attributes
-    dim = 2,
-    f   = X -> X .- mean(X, dims=1),
-    α   = 1.0,
-    κ   = nothing,
+    dim  = 2,
+    kind = :form,
 
     # aesthetic attributes
     colormap  = Makie.theme(scene, :colormap),
@@ -62,22 +92,12 @@ See https://en.wikipedia.org/wiki/Biplot.
 end
 
 function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
-  # retrieve parameters
-  X = plot[:X][]
-  d = plot[:dim][]
-  f = plot[:f][]
-  α = plot[:α][]
-  κ = plot[:κ][]
+  # biplot attributes
+  X    = plot[:X][]
+  dim  = plot[:dim][]
+  kind = plot[:kind][]
 
-  # size of design matrix
-  n, m = size(X)
-
-  # default normalization of axes
-  if isnothing(κ)
-    κ = α > 0.5 ? √(n-1) : 1.0
-  end
-
-  # retrieve options
+  # aesthetics attributes
   colormap  = plot[:colormap][]
   axesbody  = plot[:axesbody][]
   axeshead  = plot[:axeshead][]
@@ -88,18 +108,21 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   dotlabel  = plot[:dotlabel][]
   showdots  = plot[:showdots][]
 
+  # size of design matrix
+  n, p = size(X)
+
   # defaults differ on 2 or 3 dimensions
   if isnothing(axesbody)
-    axesbody = d == 2 ? 2 : 0.01
+    axesbody = dim == 2 ? 2 : 0.01
   end
   if isnothing(axeshead)
-    axeshead = d == 2 ? 6 : 0.03
+    axeshead = dim == 2 ? 6 : 0.03
   end
   if isnothing(axeslabel)
-    axeslabel = ["x$i" for i in 1:m]
+    axeslabel = ["x$i" for i in 1:p]
   end
   if isnothing(dotsize)
-    dotsize = d == 2 ? 4 : 10
+    dotsize = dim == 2 ? 4 : 10
   end
   if isnothing(dotlabel)
     dotlabel = string.(1:n)
@@ -111,27 +134,27 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   end
 
   # sanity checks
-  @assert d ∈ [2,3] "d must be 2 or 3"
-  @assert 0 ≤ α ≤ 1 "α must be in [0,1]"
-  @assert length(axeslabel) == m "axeslabel must have length $m"
+  @assert dim ∈ [2,3] "dim must be 2 or 3"
+  @assert kind ∈ [:form,:cov,:rform,:rcov] "$kind is not a valid kind of biplot"
+  @assert length(axeslabel) == p "axeslabel must have length $p"
   @assert length(dotlabel) == n "dotlabel must have length $n"
 
   # transformation
-  Z = f(X)
+  Z, α, κ = biplotof[kind](X)
 
   # singular value decomposition
   U, σ, V = svd(Z)
 
   # variance explained
-  σ² = σ[1:d] .^ 2 / sum(σ .^ 2)
+  σ² = σ[1:dim] .^ 2 / sum(σ .^ 2)
 
   # matrix factors X ≈ F*G'
-  F = U[:,1:d] .* (σ[1:d] .^ α)'
-  G = V[:,1:d] .* (σ[1:d] .^ (1 - α))'
+  F = U[:,1:dim] .* (σ[1:dim] .^ α)'
+  G = V[:,1:dim] .* (σ[1:dim] .^ (1 - α))'
 
   # plot principal axes
-  points = fill(Makie.Point(ntuple(i->0., d)), n)
-  direcs = [Makie.Vec{d}(v) for v in eachrow(G)] ./ κ
+  points = fill(Makie.Point(ntuple(i->0., dim)), n)
+  direcs = [Makie.Vec{dim}(v) for v in eachrow(G)] ./ κ
   Makie.arrows!(plot, points, direcs,
     linewidth  = axesbody,
     arrowsize  = axeshead,
@@ -147,7 +170,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   )
 
   # plot samples
-  points = [Makie.Point{d}(v) for v in eachrow(F)]
+  points = [Makie.Point{dim}(v) for v in eachrow(F)]
   Makie.scatter!(plot, points,
     markersize = dotsize,
     color = dotcolor,
@@ -163,8 +186,8 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   end
 
   # plot variance explained
-  minpos = fill(Inf, d)
-  for i in 1:d
+  minpos = fill(Inf, dim)
+  for i in 1:dim
     for direc in direcs
       if direc[i] < minpos[i]
         minpos[i] = direc[i]
