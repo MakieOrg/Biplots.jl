@@ -1,7 +1,7 @@
 name = "Biplots"
 uuid = "9eb8d32e-48e1-486a-8aed-3d24e9b2252a"
 authors = ["Júlio Hoffimann <julio.hoffimann@gmail.com> and contributors"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
