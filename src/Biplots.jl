@@ -2,6 +2,7 @@ module Biplots
 
 using LinearAlgebra
 using Statistics
+using Printf
 
 import Makie
 
@@ -115,7 +116,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   U, σ, V = svd(Z)
 
   # variance explained
-  v = σ[1:d] .^ 2 / sum(σ .^ 2)
+  σ² = σ[1:d] .^ 2 / sum(σ .^ 2)
 
   # matrix factors X ≈ F*G'
   F = U[:,1:d] .* (σ[1:d] .^ α)'
@@ -153,6 +154,20 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
       color = dotcolor,
     )
   end
+
+  # plot variance explained
+  minpos = fill(Inf, d)
+  for direc in direcs
+    for i in 1:d
+      if direc[i] < minpos[i]
+        minpos[i] = direc[i]
+      end
+    end
+  end
+  textdim = [(@sprintf "Dim %d (%.01f " i 100*v)*"%)" for (i, v) in enumerate(σ²)]
+  Makie.text!(plot, join(textdim, "\n"),
+    position = Tuple(minpos),
+  )
 end
 
 end
