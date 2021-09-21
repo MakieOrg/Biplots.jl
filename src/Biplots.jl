@@ -1,5 +1,6 @@
 module Biplots
 
+using Tables
 using LinearAlgebra
 using Statistics
 using Printf
@@ -33,10 +34,9 @@ biplotof = Dict(
 )
 
 """
-    biplot(X; dim=2, kind=:form)
+    biplot(table; kind=:form, dim=2, [aesthetics...])
 
-Biplot of design matrix `X` (nobs × nvars) of given `kind`
-in `dim`-dimensional space.
+Biplot of `table` of given `kind` in `dim`-dimensional space.
 
 There are four kinds of biplots:
 
@@ -47,8 +47,8 @@ There are four kinds of biplots:
 
 # Biplot attributes
 
-* `dim`  - number of dimensions `dim ∈ {2,3}` (default to `2`)
 * `kind` - kind of biplot (`:form`, `:cov`, `:rform` or `:rcov`)
+* `dim`  - number of dimensions `dim ∈ {2,3}` (default to `2`)
 
 # Aesthetics attributes
 
@@ -73,18 +73,17 @@ See https://en.wikipedia.org/wiki/Biplot.
 * Aitchison, J. & Greenacre, M. 2002. [Biplots of Compositional data]
   (https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/1467-9876.00275)
 """
-@Makie.recipe(Biplot, X) do scene
+@Makie.recipe(Biplot, table) do scene
   Makie.Attributes(;
     # biplot attributes
-    dim  = 2,
     kind = :form,
+    dim  = 2,
 
     # aesthetic attributes
     colormap  = Makie.theme(scene, :colormap),
     axesbody  = nothing,
     axeshead  = nothing,
     axescolor = :black,
-    axeslabel = nothing,
     dotsize   = nothing,
     dotcolor  = :black,
     dotlabel  = nothing,
@@ -93,25 +92,25 @@ See https://en.wikipedia.org/wiki/Biplot.
   )
 end
 
-function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
+function Makie.plot!(plot::Biplot{<:Tuple{Any}})
   # biplot attributes
-  X    = plot[:X][]
-  dim  = plot[:dim][]
-  kind = plot[:kind][]
+  table = plot[:table][]
+  kind  = plot[:kind][]
+  dim   = plot[:dim][]
 
   # aesthetics attributes
   colormap  = plot[:colormap][]
   axesbody  = plot[:axesbody][]
   axeshead  = plot[:axeshead][]
   axescolor = plot[:axescolor][]
-  axeslabel = plot[:axeslabel][]
   dotsize   = plot[:dotsize][]
   dotcolor  = plot[:dotcolor][]
   dotlabel  = plot[:dotlabel][]
   showdots  = plot[:showdots][]
   showlinks = plot[:showlinks][]
 
-  # size of design matrix
+  # design matrix
+  X = Tables.matrix(table)
   n, p = size(X)
 
   # defaults differ on 2 or 3 dimensions
@@ -120,9 +119,6 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   end
   if isnothing(axeshead)
     axeshead = dim == 2 ? 6 : 0.03
-  end
-  if isnothing(axeslabel)
-    axeslabel = ["x$i" for i in 1:p]
   end
   if isnothing(dotsize)
     dotsize = dim == 2 ? 4 : 10
@@ -139,7 +135,6 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
   # sanity checks
   @assert dim ∈ [2,3] "dim must be 2 or 3"
   @assert kind ∈ [:form,:cov,:rform,:rcov] "$kind is not a valid kind of biplot"
-  @assert length(axeslabel) == p "axeslabel must have length $p"
   @assert length(dotlabel) == n "dotlabel must have length $n"
 
   # transformation
@@ -167,7 +162,8 @@ function Makie.plot!(plot::Biplot{<:Tuple{AbstractMatrix}})
 
   # plot axes names
   position = Tuple.(direcs)
-  Makie.text!(plot, axeslabel,
+  names = Tables.columnnames(table)
+  Makie.text!(plot, collect(string.(names)),
     position = position,
     color = axescolor,
   )
