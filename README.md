@@ -56,15 +56,4 @@ ax.aspect = DataAspect()
 ```
 ![biplot2D](docs/biplot2D.png)
 
-```julia
-# random data set
-data  = rand(100, 5)
-name  = [:CO₂,:O₂,:N₂,:S,:Cu]
-table = (; zip(name, eachcol(data))...)
-
-# 3D standard biplot
-fig, ax = biplot(table, dim = 3)
-```
-![biplot](docs/biplot3D.png)
-
 Please check the docstring `?biplot` for available attributes.
