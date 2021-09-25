@@ -52,15 +52,17 @@ There are four kinds of biplots:
 
 # Aesthetics attributes
 
-* `axesbody`  - size of principal axes' body (depends on `dim`)
-* `axeshead`  - size of principal axes' head (depends on `dim`)
-* `axescolor` - color of principal axes (default to `:black`)
-* `axeslabel` - names of principal axes (default to `x1,x2,...`)
-* `dotsize`   - size of sample dots (depends on `dim`)
-* `dotcolor`  - color of sample dots (default to `:black`)
-* `dotlabel`  - names of sample dots (default to `1:nobs`)
-* `showdots`  - show names of dots (default to `true`)
-* `showlinks` - show links between principal axes (default to`false`)
+* `axescolormap` - colormap of principal axes (default to theme colormap)
+* `dotcolormap`  - colormap of sample dots (default to theme colormap)
+* `axesbody`     - size of principal axes' body (depends on `dim`)
+* `axeshead`     - size of principal axes' head (depends on `dim`)
+* `axescolor`    - color of principal axes (default to `:black`)
+* `axeslabel`    - names of principal axes (default to `x1,x2,...`)
+* `dotsize`      - size of sample dots (depends on `dim`)
+* `dotcolor`     - color of sample dots (default to `:black`)
+* `dotlabel`     - names of sample dots (default to `1:nobs`)
+* `showdots`     - show names of dots (default to `true`)
+* `showlinks`    - show links between principal axes (default to`false`)
 
 See https://en.wikipedia.org/wiki/Biplot.
 
@@ -80,15 +82,16 @@ See https://en.wikipedia.org/wiki/Biplot.
     dim  = 2,
 
     # aesthetic attributes
-    colormap  = Makie.theme(scene, :colormap),
-    axesbody  = nothing,
-    axeshead  = nothing,
-    axescolor = :black,
-    dotsize   = nothing,
-    dotcolor  = :black,
-    dotlabel  = nothing,
-    showdots  = true,
-    showlinks = false,
+    axescolormap = Makie.theme(scene, :colormap),
+    dotcolormap  = Makie.theme(scene, :colormap),
+    axesbody     = nothing,
+    axeshead     = nothing,
+    axescolor    = :black,
+    dotsize      = nothing,
+    dotcolor     = :black,
+    dotlabel     = nothing,
+    showdots     = true,
+    showlinks    = false,
   )
 end
 
@@ -99,15 +102,16 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
   dim   = plot[:dim][]
 
   # aesthetics attributes
-  colormap  = plot[:colormap][]
-  axesbody  = plot[:axesbody][]
-  axeshead  = plot[:axeshead][]
-  axescolor = plot[:axescolor][]
-  dotsize   = plot[:dotsize][]
-  dotcolor  = plot[:dotcolor][]
-  dotlabel  = plot[:dotlabel][]
-  showdots  = plot[:showdots][]
-  showlinks = plot[:showlinks][]
+  axescolormap = plot[:axescolormap][]
+  dotcolormap  = plot[:dotcolormap][]
+  axesbody     = plot[:axesbody][]
+  axeshead     = plot[:axeshead][]
+  axescolor    = plot[:axescolor][]
+  dotsize      = plot[:dotsize][]
+  dotcolor     = plot[:dotcolor][]
+  dotlabel     = plot[:dotlabel][]
+  showdots     = plot[:showdots][]
+  showlinks    = plot[:showlinks][]
 
   # design matrix
   X = Tables.matrix(table)
@@ -120,6 +124,11 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
   if isnothing(axeshead)
     axeshead = dim == 2 ? 6 : 0.03
   end
+  if axescolor isa AbstractVector{<:Number}
+    min, max = extrema(axescolor)
+    axesscale(x) = x / (max-min) - min / (max - min)
+    axescolor = Makie.cgrad(axescolormap)[axesscale.(axescolor)]
+  end
   if isnothing(dotsize)
     dotsize = dim == 2 ? 4 : 10
   end
@@ -128,8 +137,8 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
   end
   if dotcolor isa AbstractVector{<:Number}
     min, max = extrema(dotcolor)
-    scale(x) = x / (max-min) - min / (max - min)
-    dotcolor = Makie.cgrad(colormap)[scale.(dotcolor)]
+    dotscale(x) = x / (max-min) - min / (max - min)
+    dotcolor = Makie.cgrad(dotcolormap)[dotscale.(dotcolor)]
   end
 
   # sanity checks
