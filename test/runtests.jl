@@ -36,8 +36,19 @@ using Test
   # choose any Tables.jl table
   table = (; zip(names, eachcol(data))...)
 
-  # 2D relative variation biplot with colored dots
+  fig, ax = biplot(table, kind = :form, dotcolor = table.Red)
+  ax.aspect = DataAspect()
+  @test_reference "data/form.png" fig
+
+  fig, ax = biplot(table, kind = :cov, dotcolor = table.Red)
+  ax.aspect = DataAspect()
+  @test_reference "data/cov.png" fig
+
   fig, ax = biplot(table, kind = :rform, dotcolor = table.Red)
   ax.aspect = DataAspect()
   @test_reference "data/rform.png" fig
+
+  fig, ax = biplot(table, kind = :rcov, dotcolor = table.Red)
+  ax.aspect = DataAspect()
+  @test_reference "data/rcov.png" fig
 end
