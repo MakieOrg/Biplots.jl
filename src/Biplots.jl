@@ -9,7 +9,7 @@ using LinearAlgebra
 using Statistics
 using Printf
 
-import Makie
+import MakieCore
 
 # -----------------------
 # TYPES OF NORMALIZATION
@@ -80,8 +80,8 @@ See https://en.wikipedia.org/wiki/Biplot.
 * Aitchison, J. & Greenacre, M. 2002. [Biplots of Compositional data]
   (https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/1467-9876.00275)
 """
-@Makie.recipe(Biplot, table) do scene
-  Makie.Attributes(;
+MakieCore.@recipe(Biplot, table) do scene
+  MakieCore.Attributes(;
     # biplot attributes
     kind = :form,
     dim  = 2,
@@ -101,7 +101,7 @@ See https://en.wikipedia.org/wiki/Biplot.
   )
 end
 
-function Makie.plot!(plot::Biplot{<:Tuple{Any}})
+function MakieCore.plot!(plot::Biplot{<:Tuple{Any}})
   # biplot attributes
   table = plot[:table][]
   kind  = plot[:kind][]
@@ -179,7 +179,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
   # plot axes names
   position = Tuple.(direcs)
   names = Tables.columnnames(table)
-  Makie.text!(plot, collect(string.(names)),
+  MakieCore.text!(plot, collect(string.(names)),
     position = position,
     textsize = textsize,
     color = axescolor,
@@ -187,7 +187,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
 
   # plot links between axes
   if showlinks
-    links = Makie.Vec{dim}[]
+    links = MakieCore.Vec{dim}[]
     for i in 1:p
       for j in i+1:p
         push!(links, direcs[i])
@@ -203,7 +203,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
   end
 
   # plot samples
-  points = [Makie.Point{dim}(v) for v in eachrow(F)]
+  points = [MakieCore.Point{dim}(v) for v in eachrow(F)]
   Makie.scatter!(plot, points,
     markersize = dotsize,
     color = dotcolor,
@@ -212,7 +212,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
   if showdots
     # plot samples names
     position = Tuple.(points)
-    Makie.text!(plot, dotlabel,
+    MakieCore.text!(plot, dotlabel,
       position = position,
       textsize = textsize,
       color = dotcolor,
@@ -234,7 +234,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
     end
   end
   textdim = [(@sprintf "Dim %d (%.01f " i 100*v)*"%)" for (i, v) in enumerate(σ²)]
-  Makie.text!(plot, join(textdim, "\n"),
+  MakieCore.text!(plot, join(textdim, "\n"),
     position = Tuple(minpos),
   )
 end
