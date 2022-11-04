@@ -167,7 +167,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
     axesbody = dim == 2 ? 2 : 0.01
   end
   if isnothing(axeshead)
-    axeshead = dim == 2 ? 6 : 0.03
+    axeshead = dim == 2 ? 14 : 0.03
   end
   if axescolor isa AbstractVector{<:Number}
     min, max = extrema(axescolor)
