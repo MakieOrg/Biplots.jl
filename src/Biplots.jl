@@ -38,6 +38,41 @@ biplotof = Dict(
 )
 
 """
+    factors(table; kind=:form, dim=2)
+
+Return `F`, `G/k` and `σ²` where `F` and `G` are the
+factors (i.e. matrices with rank `dim`) of the design
+matrix `Z` obtained with a given `kind` of transformation.
+
+The scalar `κ` scales the column vectors for plotting
+purposes and the variance explained `σ²` is also returned.
+"""
+function factors(table; kind=:form, dim=2)
+  # sanity checks
+  @assert dim ∈ [2,3] "dim must be 2 or 3"
+  @assert kind ∈ [:form,:cov,:rform,:rcov] "$kind is not a valid kind of biplot"
+
+  # original design matrix
+  X = Tables.matrix(table)
+
+  # matrix transformation
+  Z, α, κ = biplotof[kind](X)
+
+  # singular value decomposition
+  U, σ, V = svd(Z)
+
+  # matrix factors Z ≈ F*G'
+  F = U[:,1:dim] .* (σ[1:dim] .^ α)'
+  G = V[:,1:dim] .* (σ[1:dim] .^ (1 - α))'
+
+  # variance explained
+  σ² = σ[1:dim] .^ 2 / sum(σ .^ 2)
+
+  # return scaled factors
+  F, G/κ, σ²
+end
+
+"""
     biplot(table; kind=:form, dim=2, [aesthetics...])
 
 Biplot of `table` of given `kind` in `dim`-dimensional space.
@@ -120,9 +155,12 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
   showdots     = plot[:showdots][]
   showlinks    = plot[:showlinks][]
 
-  # design matrix
-  X = Tables.matrix(table)
-  n, p = size(X)
+  # biplot factors
+  F, G, σ² = factors(table, kind=kind, dim=dim)
+
+  # n samples x p variables
+  n = size(F, 1)
+  p = size(G, 1)
 
   # defaults differ on 2 or 3 dimensions
   if isnothing(axesbody)
@@ -148,27 +186,9 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
     dotcolor = Makie.cgrad(dotcolormap)[dotscale.(dotcolor)]
   end
 
-  # sanity checks
-  @assert dim ∈ [2,3] "dim must be 2 or 3"
-  @assert kind ∈ [:form,:cov,:rform,:rcov] "$kind is not a valid kind of biplot"
-  @assert length(dotlabel) == n "dotlabel must have length $n"
-
-  # transformation
-  Z, α, κ = biplotof[kind](X)
-
-  # singular value decomposition
-  U, σ, V = svd(Z)
-
-  # variance explained
-  σ² = σ[1:dim] .^ 2 / sum(σ .^ 2)
-
-  # matrix factors X ≈ F*G'
-  F = U[:,1:dim] .* (σ[1:dim] .^ α)'
-  G = V[:,1:dim] .* (σ[1:dim] .^ (1 - α))'
-
   # plot principal axes
   points = fill(Makie.Point(ntuple(i->0., dim)), n)
-  direcs = [Makie.Vec{dim}(v) for v in eachrow(G)] ./ κ
+  direcs = [Makie.Vec{dim}(v) for v in eachrow(G)]
   Makie.arrows!(plot, points, direcs,
     linewidth  = axesbody,
     arrowsize  = axeshead,
