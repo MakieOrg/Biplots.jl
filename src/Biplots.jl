@@ -66,7 +66,7 @@ function factors(table; kind=:form, dim=2)
   G = V[:,1:dim] .* (σ[1:dim] .^ (1 - α))'
 
   # variance explained
-  σ² = σ .^ 2 / sum(σ .^ 2)
+  σ² = σ[1:dim] .^ 2 / sum(σ .^ 2)
 
   # return scaled factors
   F, G/κ, σ²
@@ -253,7 +253,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
       end
     end
   end
-  textdim = [(@sprintf "Dim %d (%.01f " i 100*v)*"%)" for (i, v) in enumerate(σ²[1:dim])]
+  textdim = [(@sprintf "Dim %d (%.01f " i 100*v)*"%)" for (i, v) in enumerate(σ²)]
   Makie.text!(plot, join(textdim, "\n"),
     position = Tuple(minpos),
   )
