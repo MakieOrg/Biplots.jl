@@ -93,7 +93,7 @@ There are four kinds of biplots:
 
 * `axescolormap` - colormap of principal axes (default to theme colormap)
 * `dotcolormap`  - colormap of sample dots (default to theme colormap)
-* `textsize`     - text size in axes and dots (default to `16`)
+* `fontsize`     - font size in axes and dots (default to `12`)
 * `axesbody`     - size of principal axes' body (depends on `dim`)
 * `axeshead`     - size of principal axes' head (depends on `dim`)
 * `axescolor`    - color of principal axes (default to `:black`)
@@ -124,7 +124,7 @@ See https://en.wikipedia.org/wiki/Biplot.
     # aesthetic attributes
     axescolormap = Makie.theme(scene, :colormap),
     dotcolormap  = Makie.theme(scene, :colormap),
-    textsize     = 16,
+    fontsize     = 12,
     axesbody     = nothing,
     axeshead     = nothing,
     axescolor    = :black,
@@ -145,7 +145,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
   # aesthetics attributes
   axescolormap = plot[:axescolormap][]
   dotcolormap  = plot[:dotcolormap][]
-  textsize     = plot[:textsize][]
+  fontsize     = plot[:fontsize][]
   axesbody     = plot[:axesbody][]
   axeshead     = plot[:axeshead][]
   axescolor    = plot[:axescolor][]
@@ -201,7 +201,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
   names = Tables.columnnames(table)
   Makie.text!(plot, collect(string.(names)),
     position = position,
-    textsize = textsize,
+    fontsize = fontsize,
     color = axescolor,
   )
 
@@ -234,7 +234,7 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
     position = Tuple.(points)
     Makie.text!(plot, dotlabel,
       position = position,
-      textsize = textsize,
+      fontsize = fontsize,
       color = dotcolor,
     )
   end
