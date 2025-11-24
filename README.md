@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/juliohm/Biplots.jl/workflows/CI/badge.svg)](https://github.com/juliohm/Biplots.jl/actions)
 
-[Biplot](https://en.wikipedia.org/wiki/Biplot) recipes in 2D and 3D for Makie.jl.
+[Biplot](https://en.wikipedia.org/wiki/Biplot) recipes for Makie.jl.
 
 ## Installation
 
@@ -50,10 +50,10 @@ names = [:Black,:White,:Blue,:Red,:Yellow,:Other]
 # choose any Tables.jl table
 table = (; zip(names, eachcol(data))...)
 
-# 2D relative variation biplot with colored dots
+# relative variation biplot with colored dots
 fig, ax = biplot(table, kind = :rform, dotcolor = table.Red)
 ax.aspect = DataAspect()
 ```
-![biplot2D](docs/biplot2D.png)
+![biplot](docs/biplot.png)
 
 Please check the docstring `?biplot` for available attributes.

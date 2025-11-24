@@ -73,9 +73,9 @@ function factors(table; kind=:form, dim=2)
 end
 
 """
-    biplot(table; kind=:form, dim=2, [aesthetics...])
+    biplot(table; kind=:form, [aesthetics...])
 
-Biplot of `table` of given `kind` in `dim`-dimensional space.
+Biplot of `table` of given `kind` in 2-dimensional space.
 
 There are four kinds of biplots:
 
@@ -87,18 +87,17 @@ There are four kinds of biplots:
 # Biplot attributes
 
 * `kind` - kind of biplot (`:form`, `:cov`, `:rform` or `:rcov`)
-* `dim`  - number of dimensions `dim ∈ {2,3}` (default to `2`)
 
 # Aesthetics attributes
 
 * `axescolormap` - colormap of principal axes (default to theme colormap)
 * `dotcolormap`  - colormap of sample dots (default to theme colormap)
 * `fontsize`     - font size in axes and dots (default to `12`)
-* `axesbody`     - size of principal axes' body (depends on `dim`)
-* `axeshead`     - size of principal axes' head (depends on `dim`)
+* `axesbody`     - size of principal axes' body (default to `2`)
+* `axeshead`     - size of principal axes' head (default to `8`)
 * `axescolor`    - color of principal axes (default to `:black`)
 * `axeslabel`    - names of principal axes (default to `x1,x2,...`)
-* `dotsize`      - size of sample dots (depends on `dim`)
+* `dotsize`      - size of sample dots (default to `4`)
 * `dotcolor`     - color of sample dots (default to `:black`)
 * `dotlabel`     - names of sample dots (default to `1:nobs`)
 * `showdots`     - show names of dots (default to `true`)
@@ -119,16 +118,15 @@ See https://en.wikipedia.org/wiki/Biplot.
   Makie.Attributes(;
     # biplot attributes
     kind = :form,
-    dim  = 2,
 
     # aesthetic attributes
     axescolormap = Makie.theme(scene, :colormap),
     dotcolormap  = Makie.theme(scene, :colormap),
     fontsize     = 12,
-    axesbody     = nothing,
-    axeshead     = nothing,
+    axesbody     = 2,
+    axeshead     = 8,
     axescolor    = :black,
-    dotsize      = nothing,
+    dotsize      = 4,
     dotcolor     = :black,
     dotlabel     = nothing,
     showdots     = true,
@@ -140,7 +138,6 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
   # biplot attributes
   table = plot[:table][]
   kind  = plot[:kind][]
-  dim   = plot[:dim][]
 
   # aesthetics attributes
   axescolormap = plot[:axescolormap][]
@@ -155,6 +152,9 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
   showdots     = plot[:showdots][]
   showlinks    = plot[:showlinks][]
 
+  # dimension of the biplot
+  dim = 2
+
   # biplot factors
   F, G, σ² = factors(table, kind=kind, dim=dim)
 
@@ -162,20 +162,11 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
   n = size(F, 1)
   p = size(G, 1)
 
-  # defaults differ on 2 or 3 dimensions
-  if isnothing(axesbody)
-    axesbody = dim == 2 ? 2 : 0.01
-  end
-  if isnothing(axeshead)
-    axeshead = dim == 2 ? 14 : 0.03
-  end
+  # defaults aesthetics
   if axescolor isa AbstractVector{<:Number}
     min, max = extrema(axescolor)
     axesscale(x) = x / (max-min) - min / (max - min)
     axescolor = Makie.cgrad(axescolormap)[axesscale.(axescolor)]
-  end
-  if isnothing(dotsize)
-    dotsize = dim == 2 ? 4 : 10
   end
   if isnothing(dotlabel)
     dotlabel = string.(1:n)
@@ -187,22 +178,21 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
   end
 
   # plot principal axes
-  points = fill(Makie.Point(ntuple(i->0., dim)), n)
+  origin = fill(Makie.Point(ntuple(i->0.0, dim)), p)
   direcs = [Makie.Vec{dim}(v) for v in eachrow(G)]
-  Makie.arrows!(plot, points, direcs,
-    linewidth  = axesbody,
-    arrowsize  = axeshead,
-    arrowcolor = axescolor,
-    linecolor  = axescolor,
+  Makie.arrows2d!(plot, origin, direcs,
+    shaftwidth = axesbody,
+    tipwidth = axeshead,
+    color = axescolor
   )
 
   # plot axes names
-  position = Tuple.(direcs)
-  names = Tables.columnnames(table)
-  Makie.text!(plot, collect(string.(names)),
-    position = position,
-    fontsize = fontsize,
-    color = axescolor,
+  cols = Tables.columns(table)
+  names = [string(n) for n in Tables.columnnames(cols)]
+  Makie.annotation!(plot, direcs,
+    text = names,
+    textcolor = axescolor,
+    fontsize = fontsize
   )
 
   # plot links between axes
@@ -229,13 +219,12 @@ function Makie.plot!(plot::Biplot{<:Tuple{Any}})
     color = dotcolor,
   )
 
+  # plot samples names
   if showdots
-    # plot samples names
-    position = Tuple.(points)
-    Makie.text!(plot, dotlabel,
-      position = position,
-      fontsize = fontsize,
-      color = dotcolor,
+    Makie.annotation!(plot, points,
+      text = dotlabel,
+      textcolor = dotcolor,
+      fontsize = fontsize
     )
   end
 
