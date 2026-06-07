@@ -31,10 +31,10 @@ rformtransform(X) = (Z=logcenter(X), α=1.0, κ=1.0           )
 rcovtransform(X)  = (Z=logcenter(X), α=0.0, κ=√size(X,2)    )
 
 biplotof = Dict(
-  :form => formtransform,
-  :cov  => covtransform,
+  :form  => formtransform,
+  :cov   => covtransform,
   :rform => rformtransform,
-  :rcov => rcovtransform
+  :rcov  => rcovtransform
 )
 
 """
@@ -114,43 +114,38 @@ See https://en.wikipedia.org/wiki/Biplot.
 * Aitchison, J. & Greenacre, M. 2002. [Biplots of Compositional data]
   (https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/1467-9876.00275)
 """
-@Makie.recipe(Biplot, table) do scene
-  Makie.Attributes(;
-    # biplot attributes
-    kind = :form,
-
-    # aesthetic attributes
-    axescolormap = Makie.theme(scene, :colormap),
-    dotcolormap  = Makie.theme(scene, :colormap),
-    fontsize     = 12,
-    axesbody     = 2,
-    axeshead     = 8,
-    axescolor    = :black,
-    dotsize      = 4,
-    dotcolor     = :black,
-    dotlabel     = nothing,
-    showdots     = true,
-    showlinks    = false,
-  )
+@Makie.recipe Biplot (table,) begin
+  kind         = :form
+  axescolormap = @inherit colormap
+  dotcolormap  = @inherit colormap
+  fontsize     = 12
+  axesbody     = 2
+  axeshead     = 8
+  axescolor    = :black
+  dotsize      = 4
+  dotcolor     = :black
+  dotlabel     = nothing
+  showdots     = true
+  showlinks    = false
 end
 
-function Makie.plot!(plot::Biplot{<:Tuple{Any}})
+function Makie.plot!(plot::Biplot)
   # biplot attributes
-  table = plot[:table][]
-  kind  = plot[:kind][]
+  table = plot.table[]
+  kind  = plot.kind[]
 
   # aesthetics attributes
-  axescolormap = plot[:axescolormap][]
-  dotcolormap  = plot[:dotcolormap][]
-  fontsize     = plot[:fontsize][]
-  axesbody     = plot[:axesbody][]
-  axeshead     = plot[:axeshead][]
-  axescolor    = plot[:axescolor][]
-  dotsize      = plot[:dotsize][]
-  dotcolor     = plot[:dotcolor][]
-  dotlabel     = plot[:dotlabel][]
-  showdots     = plot[:showdots][]
-  showlinks    = plot[:showlinks][]
+  axescolormap = plot.axescolormap[]
+  dotcolormap  = plot.dotcolormap[]
+  fontsize     = plot.fontsize[]
+  axesbody     = plot.axesbody[]
+  axeshead     = plot.axeshead[]
+  axescolor    = plot.axescolor[]
+  dotsize      = plot.dotsize[]
+  dotcolor     = plot.dotcolor[]
+  dotlabel     = plot.dotlabel[]
+  showdots     = plot.showdots[]
+  showlinks    = plot.showlinks[]
 
   # dimension of the biplot
   dim = 2
