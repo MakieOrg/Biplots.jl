@@ -114,7 +114,7 @@ See https://en.wikipedia.org/wiki/Biplot.
 * Aitchison, J. & Greenacre, M. 2002. [Biplots of Compositional data]
   (https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/1467-9876.00275)
 """
-@Makie.recipe Biplot (table,) begin
+Makie.@recipe Biplot (table,) begin
   kind         = :form
   axescolormap = @inherit colormap
   dotcolormap  = @inherit colormap
